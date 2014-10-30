@@ -8,8 +8,9 @@ Desktop.ini
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
 bin/*
+!bin/.gitignore
 build/*
-
+!build/.gitignore
 
 # Windows Installer files
 *.cab
