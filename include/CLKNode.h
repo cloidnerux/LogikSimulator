@@ -3,42 +3,34 @@
 #include <vector>
 #include <iostream>
 #include <memory>
-#include "tFunc.h"
+#include "node.h"
 
 template<class T>
-class node
+class CLKNode : public node<T>
 {
 public:
-	int weight;
-	T state;		//Every node has only one source
-	int ID;
-	std::vector <tFunc*> assignedFunctions;		//but multiple sinks
-	int cycleTime;
-	node()
+	//int weight;
+	unsigned int frequency;
+	int cycleDelta;
+	//T state;		//Every node has only one source
+	//int ID;
+	//std::vector <tFunc*> assignedFunctions;		//but multiple sinks
+	//int cycleTime;
+	CLKNode() : node()
 	{
-		state = 0;
+		frequency = 1;
+		cycleDelta = 0;
+	}
+	CLKNode(unsigned int Frequency)
+	{
+		state = false;
 		ID = 0;
+		cycleTime = 0;
 		weight = 0;
-		cycleTime = 0;
+		frequency = Frequency;
+		cycleDelta = 0;
 	}
-	node(int Weight)
-	{
-		state = false;
-		ID = 0;
-		cycleTime = 0;
-		weight = Weight;
-	}
-
-	node(int Weight, bool State)
-	{
-		state = false;
-		ID = 0;
-		cycleTime = 0;
-		weight = Weight;
-		state = State;
-	}
-
-	node(const node<T> &a)
+	CLKNode(const CLKNode<T> &a)
 	{
 		state = a.state;
 		ID = a.ID;
@@ -46,8 +38,10 @@ public:
 		cycleTime = a.cycleTime;
 		assignedFunctions.clear();
 		assignedFunctions = a.assignedFunctions;
+		frequency = a.frequency;
+		cycleDelta = a.cycleDelta;
 	}
-	node(const node<T> *a)
+	CLKNode(const CLKNode<T> *a)
 	{
 		state = a->state;
 		ID = a->ID;
@@ -55,14 +49,23 @@ public:
 		cycleTime = a->cycleTime;
 		assignedFunctions.clear();
 		assignedFunctions = a->assignedFunctions;
+		frequency = a->frequency;
+		cycleDelta = a->cycleDelta;
 	}
-	~node()
+	~CLKNode()
 	{
 		assignedFunctions.clear();
 	}
+	
 	virtual void Update(int CycleTime)
 	{
 		cycleTime = CycleTime;
+		cycleDelta++;
+		if(cycleDelta == frequency)
+		{
+			state = !state;
+			cycleDelta = 0;
+		}
 		for(auto it = assignedFunctions.begin(); it != assignedFunctions.end(); it++)
 		{
 			(*it)->Update(cycleTime);
