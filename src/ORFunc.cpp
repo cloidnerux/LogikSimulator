@@ -14,6 +14,10 @@ ORFunc::ORFunc(shared_ptr<Node> a, shared_ptr<Node> b, shared_ptr<Node> out, int
 	b->assignedFunctions.push_back(this);
 
 	outputs.push_back(make_shared<outputBuffer<bool>>(new outputBuffer<bool>(out.get(), new RingBuffer<bool>(delay))));
+	for(int i = 0; i < delay; i++)
+	{
+		outputs[0]->buffer->push_back(out->state);
+	}
 }
 
 ORFunc::~ORFunc()

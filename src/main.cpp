@@ -24,18 +24,18 @@ int main(int argc, char ** argv)
 	int SIM_CYCLES = 30;
 	int MAX_CYCLES = SIM_CYCLES + INIT_CYCLES;
 
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(0)));		//ID 0
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(0)));		//ID 1
+	nodes.push_back(make_shared<node<bool>>(new node<bool>(0, true)));		//ID 0
+	nodes.push_back(make_shared<node<bool>>(new node<bool>(0, true)));		//ID 1
 	nodes.push_back(make_shared<node<bool>>(new node<bool>(1)));		//ID 2
 	nodes.push_back(make_shared<node<bool>>(new node<bool>(1)));		//ID 3
 	nodes.push_back(make_shared<node<bool>>(new node<bool>(2)));		//ID 4
 	nodes.push_back(make_shared<node<bool>>(new node<bool>(2)));		//ID 5
 	nodes.push_back(make_shared<CLKNode<bool>>(new CLKNode<bool>(8)));		//ID 6
 	nodes.push_back(make_shared<node<bool>>(new node<bool>(1)));		//ID 7
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(3)));		//ID 8
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(3)));		//ID 9
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(4, true)));		//ID 10
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(4, false)));		//ID 11
+	nodes.push_back(make_shared<node<bool>>(new node<bool>(3, true)));		//ID 8
+	nodes.push_back(make_shared<node<bool>>(new node<bool>(3, true)));		//ID 9
+	nodes.push_back(make_shared<node<bool>>(new node<bool>(4, false)));		//ID 10
+	nodes.push_back(make_shared<node<bool>>(new node<bool>(4, true)));		//ID 11
 
 	tFuncs.push_back(make_shared<ANDFunc>(new ANDFunc(nodes[3], nodes[7], nodes[4], 1)));
 	tFuncs.push_back(make_shared<ANDFunc>(new ANDFunc(nodes[2], nodes[7], nodes[4], 1)));
@@ -81,8 +81,8 @@ int main(int argc, char ** argv)
 			}
 			else
 			{
-				nodes[0].get()->state = false;
-				nodes[1].get()->state = false;
+				nodes[0].get()->state = true;
+				nodes[1].get()->state = true;
 			}
 			/////////////////////////////////////////////////////////////////////
 
@@ -101,7 +101,8 @@ int main(int argc, char ** argv)
 #endif
 			/////////////////////////////////////////////////////////////////////
 			//output the result for this particular case
-			cout << "Clock = " << nodes[6].get()->state << ", Result - q1 = " << nodes[10].get()->state << ", !q1 = " << nodes[11].get()->state << endl;
+			cout << "Clock = " << nodes[6].get()->state << ", S: " <<  nodes[8].get()->state << ", R: " << nodes[9].get()->state << ", Result - q1 = " << nodes[10].get()->state << ", !q1 = " << nodes[11].get()->state << endl;
+			//cout << "    S: " <<  nodes[8].get()->state << ", R: " << nodes[9].get()->state << endl;
 			/////////////////////////////////////////////////////////////////////
 			//save the actuall node states in an array to analyse later
 			for(unsigned int i = 0; i < nodes.size(); i++)
