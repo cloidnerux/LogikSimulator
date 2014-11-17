@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <cstring>
 
 template<class T>
 class RingBuffer
@@ -14,7 +15,7 @@ public:
 	{
 		size = 1;
 		buffer = new T[size];
-		memset(buffer, 0, sizeof(T)*size);
+		std::memset(buffer, 0, sizeof(T)*size);
 		currentPos = 0;
 	}
 
@@ -23,7 +24,7 @@ public:
 	{
 		size = Size + 1;			//We want 1 more element than specified, so a 0 element RingBuffer is still 1 element big
 		buffer = new T[size];
-		memset(buffer, 0, sizeof(T)*size);
+		std::memset(buffer, 0, sizeof(T)*size);
 		currentPos = 0;
 	}
 
@@ -31,13 +32,21 @@ public:
 	{
 		size = a->size;
 		buffer = new T[size];
-		memcpy_s(buffer, size, a->buffer, size);
+		#ifdef _MSC_VER
+		memcpy_s(buffer, size, a.buffer, size);
+		#else
+		std::memcpy(buffer, a.buffer, size);
+		#endif
 	}
 	RingBuffer(const RingBuffer & a)
 	{
 		size = a.size;
 		buffer = new T[size];
+		#ifdef _MSC_VER
 		memcpy_s(buffer, size, a.buffer, size);
+		#else
+		std::memcpy(buffer, a.buffer, size);
+		#endif
 	}
 
 	~RingBuffer()

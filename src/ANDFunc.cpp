@@ -3,6 +3,10 @@
 #include <vector>
 #include <memory>
 
+#ifndef _MSC_VER
+#include <cstdio>
+#endif
+
 using namespace std;
 
 ANDFunc::ANDFunc(shared_ptr<Node> a, shared_ptr<Node> b, shared_ptr<Node> out, int delay)
@@ -60,6 +64,11 @@ char * ANDFunc::GetType()
 char * ANDFunc::GetState()
 {
 	char * state = new char[100];
+#ifdef _MSC_VER
 	sprintf_s(state, 100, "a = %d, b = %d, q = %d", inputs[0].get()->state, inputs[1].get()->state, outputs[0].get()->output->state);
+#else
+	std::sprintf(state, "a = %d, b = %d, q = %d", inputs[0].get()->state, inputs[1].get()->state, outputs[0].get()->output->state);
+#endif
+
 	return state;
 }

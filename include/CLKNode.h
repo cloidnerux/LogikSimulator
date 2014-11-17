@@ -16,59 +16,59 @@ public:
 	//int ID;
 	//std::vector <tFunc*> assignedFunctions;		//but multiple sinks
 	//int cycleTime;
-	CLKNode() : node()
+	CLKNode() : node<T>()
 	{
 		frequency = 1;
 		cycleDelta = 0;
 	}
-	CLKNode(unsigned int Frequency)
+	CLKNode(unsigned int Frequency) : node<T>()
 	{
-		state = false;
-		ID = 0;
-		cycleTime = 0;
-		weight = 0;
-		frequency = Frequency;
-		cycleDelta = 0;
+		this->state = false;
+		this->ID = 0;
+		this->cycleTime = 0;
+		this->weight = 0;
+		this->frequency = Frequency;
+		this->cycleDelta = 0;
 	}
 	CLKNode(const CLKNode<T> &a)
 	{
-		state = a.state;
-		ID = a.ID;
-		weight = a.weight;
-		cycleTime = a.cycleTime;
-		assignedFunctions.clear();
-		assignedFunctions = a.assignedFunctions;
-		frequency = a.frequency;
-		cycleDelta = a.cycleDelta;
+		this->state = a.state;
+		this->ID = a.ID;
+		this->weight = a.weight;
+		this->cycleTime = a.cycleTime;
+		this->assignedFunctions.clear();
+		this->assignedFunctions = a.assignedFunctions;
+		this->frequency = a.frequency;
+		this->cycleDelta = a.cycleDelta;
 	}
 	CLKNode(const CLKNode<T> *a)
 	{
-		state = a->state;
-		ID = a->ID;
-		weight = a->weight;
-		cycleTime = a->cycleTime;
-		assignedFunctions.clear();
-		assignedFunctions = a->assignedFunctions;
-		frequency = a->frequency;
-		cycleDelta = a->cycleDelta;
+		this->state = a->state;
+		this->ID = a->ID;
+		this->weight = a->weight;
+		this->cycleTime = a->cycleTime;
+		this->assignedFunctions.clear();
+		this->assignedFunctions = a->assignedFunctions;
+		this->frequency = a->frequency;
+		this->cycleDelta = a->cycleDelta;
 	}
 	~CLKNode()
 	{
-		assignedFunctions.clear();
+		this->assignedFunctions.clear();
 	}
 	
 	virtual void Update(int CycleTime)
 	{
-		cycleTime = CycleTime;
+		this->cycleTime = CycleTime;
 		cycleDelta++;
 		if(cycleDelta == frequency)
 		{
-			state = !state;
+			this->state = !(this->state);
 			cycleDelta = 0;
 		}
-		for(auto it = assignedFunctions.begin(); it != assignedFunctions.end(); it++)
+		for(auto it = this->assignedFunctions.begin(); it != this->assignedFunctions.end(); it++)
 		{
-			(*it)->Update(cycleTime);
+			(*it)->Update(this->cycleTime);
 		}
 	}
 };

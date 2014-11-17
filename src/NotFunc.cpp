@@ -3,6 +3,10 @@
 #include <vector>
 #include <memory>
 
+#ifndef _MSC_VER
+#include <cstdio>
+#endif
+
 using namespace std;
 
 NOTFunc::NOTFunc(shared_ptr<Node> a, shared_ptr<Node> out, int delay)
@@ -53,6 +57,11 @@ char * NOTFunc::GetType()
 char * NOTFunc::GetState()
 {
 	char * state = new char[100];
-	sprintf_s(state, 100, "a = %d, q = %d", inputs[0].get()->state, inputs[1].get()->state, outputs[0].get()->output->state);
+#ifdef _MSC_VER
+	sprintf_s(state, 100, "a = %d, q = %d", inputs[0].get()->state, outputs[0].get()->output->state);
+#else
+	sprintf(state, "a = %d, q = %d", inputs[0].get()->state, outputs[0].get()->output->state);
+#endif
+
 	return state;
 }

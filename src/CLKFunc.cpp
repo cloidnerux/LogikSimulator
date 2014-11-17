@@ -3,6 +3,10 @@
 #include <vector>
 #include <memory>
 
+#ifndef _MSC_VER
+#include <cstdio>
+#endif
+
 using namespace std;
 
 CLKFunc::CLKFunc(shared_ptr<Node> out, unsigned int Frequency)
@@ -41,6 +45,10 @@ char * CLKFunc::GetType()
 char * CLKFunc::GetState()
 {
 	char * state = new char[100];
+#ifdef _MSC_VER
 	sprintf_s(state, 100, "clk = %d", outputs[0].get()->output->state);
+#else
+	sprintf(state, "clk = %d", outputs[0].get()->output->state);
+#endif
 	return state;
 }

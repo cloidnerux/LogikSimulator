@@ -4,6 +4,10 @@
 #include <memory>
 #include <string>
 
+#ifndef _MSC_VER
+#include <cstdio>
+#endif
+
 using namespace std;
 
 
@@ -41,7 +45,11 @@ void XORFunc::Update(int cycleTime)
 	if(inputs.size() < 2)
 	{
 		char text[100];
+		#ifdef _MSC_VER
 		sprintf_s(text, "To few inputs for XOR operation, minimum is 2, inputs has %d elements", inputs.size());
+		#else
+		sprintf(text, "To few inputs for XOR operation, minimum is 2, inputs has %d elements", inputs.size());
+		#endif
 		throw text;
 	}
 	if(outputs.size() != 1)
@@ -66,6 +74,10 @@ char * XORFunc::GetType()
 char * XORFunc::GetState()
 {
 	char * state = new char[100];
+#ifdef _MSC_VER
 	sprintf_s(state, 100, "a = %d, b = %d, q = %d", inputs[0].get()->state, inputs[1].get()->state, outputs[0].get()->output->state);
+#else
+	sprintf(state, "a = %d, b = %d, q = %d", inputs[0].get()->state, inputs[1].get()->state, outputs[0].get()->output->state);
+#endif
 	return state;
 }

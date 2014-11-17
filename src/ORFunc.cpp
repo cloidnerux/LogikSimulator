@@ -3,6 +3,10 @@
 #include <vector>
 #include <memory>
 
+#ifndef _MSC_VER
+#include <cstdio>
+#endif
+
 using namespace std;
 
 ORFunc::ORFunc(shared_ptr<Node> a, shared_ptr<Node> b, shared_ptr<Node> out, int delay)
@@ -60,6 +64,10 @@ char * ORFunc::GetType()
 char * ORFunc::GetState()
 {
 	char * state = new char[100];
+#ifdef _MSC_VER
 	sprintf_s(state, 100, "a = %d, b = %d, q = %d", inputs[0].get()->state, inputs[1].get()->state, outputs[0].get()->output->state);
+#else
+	sprintf(state, "a = %d, b = %d, q = %d", inputs[0].get()->state, inputs[1].get()->state, outputs[0].get()->output->state);
+#endif
 	return state;
 }
