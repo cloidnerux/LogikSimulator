@@ -1,205 +1,142 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <memory>
 #include <string>
+#include <sstream>
+#include <random>
+#include <time.h>
 
-#include "node.h"
-#include "tFunc.h"
-#include "XORFunc.h"
-#include "ORFunc.h"
-#include "ANDFunc.h"
-#include "NotFunc.h"
-#include "NANDFunc.h"
-#include "CLKFunc.h"
-#include "CLKNode.h"
+#include "state.h"
 
 using namespace std;
 
-int main(int argc, char ** argv)
+//Parses an input string of a csv file to a list of states, returns the number of states
+int parse(char * data, vector<shared_ptr<state>> & states);
+int LoadFileAndParse(const char * fileName, vector<shared_ptr<state>> & states);
+void DisplayStates(vector<shared_ptr<state>> & states);
+
+int main(int argc, char **argv)
 {
-	vector<shared_ptr<node<bool>>> nodes;
-	vector<shared_ptr<tFunc>> tFuncs;
-
-	int INIT_CYCLES = 20;
-	int SIM_CYCLES = 30;
-	int MAX_CYCLES = SIM_CYCLES + INIT_CYCLES;
-
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(0, true)));		//ID 0
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(0, true)));		//ID 1
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(1)));		//ID 2
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(1)));		//ID 3
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(2)));		//ID 4
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(2)));		//ID 5
-	nodes.push_back(make_shared<CLKNode<bool>>(new CLKNode<bool>(8)));		//ID 6
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(1)));		//ID 7
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(3, true)));		//ID 8
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(3, true)));		//ID 9
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(4, false)));		//ID 10
-	nodes.push_back(make_shared<node<bool>>(new node<bool>(4, true)));		//ID 11
-
-	tFuncs.push_back(make_shared<ANDFunc>(new ANDFunc(nodes[3], nodes[7], nodes[4], 1)));
-	tFuncs.push_back(make_shared<ANDFunc>(new ANDFunc(nodes[2], nodes[7], nodes[4], 1)));
-	tFuncs.push_back(make_shared<NANDFunc>(new NANDFunc(nodes[4], nodes[6], nodes[8], 2)));
-	tFuncs.push_back(make_shared<NANDFunc>(new NANDFunc(nodes[5], nodes[6], nodes[9], 2)));
-	tFuncs.push_back(make_shared<NANDFunc>(new NANDFunc(nodes[9], nodes[10], nodes[11], 2)));
-	tFuncs.push_back(make_shared<NANDFunc>(new NANDFunc(nodes[8], nodes[11], nodes[10], 2)));
-	tFuncs.push_back(make_shared<NOTFunc>(new NOTFunc(nodes[0], nodes[3], 0)));
-	tFuncs.push_back(make_shared<NOTFunc>(new NOTFunc(nodes[1], nodes[2], 0)));
-	tFuncs.push_back(make_shared<NOTFunc>(new NOTFunc(nodes[6], nodes[7], 1)));
-	
-
-
-
-	auto_ptr<bool> data(new bool[nodes.size() * MAX_CYCLES]);		//In this array we store the state of all nodes for each iteration
-
-	memset(data.get(), 0, sizeof(bool) * nodes.size() * MAX_CYCLES);	//Ensure the array is cleared
-
-	string s;
-
-	for(int cycle = 0; cycle < MAX_CYCLES; cycle++)
+	if(argc < 2)
 	{
-		try
+		cout << "To few arguments! Expected File" << endl;
+		cout << "Quit" << endl;
+		getchar();
+		return 0;
+	}
+	vector<shared_ptr<state>> states;
+	try
+	{
+		cout << "Loaded " << LoadFileAndParse(argv[1], states) << " States" << endl;
+	}
+	catch(string s)
+	{
+		cout << s << endl;
+		getchar();
+		return 0;
+	}
+	catch(...)
+	{
+		cout << "Unknown exception!" << endl;
+		getchar();
+		return 0;
+	}
+	DisplayStates(states);
+	cout << "Start sim with random data" << endl;
+	int cycles = 100;
+	state * currentState = states[0].get();
+	srand(time(NULL));
+	bool input = (rand() % 2) > 0;
+	for(int i = 0; i < cycles; i++)
+	{
+		input = (rand() % 2) > 0;
+		cout << "State " << currentState->stateName << ", input: " << input;
+		if(input)
 		{
-			if( cycle >= INIT_CYCLES)
-			{
-			/////////////////////////////////////////////////////////////////////
-			//One way of providing inputs
-				cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" << endl;
-				cout << "cycle time: " << cycle << endl << endl;
-				cout << "Input state for S (0, 1, keep): ";
-				cin >> s;
-				if(s == "1")
-					nodes[0].get()->state = true;
-				else if(s == "0")
-					nodes[0].get()->state = false;
-				cout << "Input state for R (0, 1, keep): ";
-				cin >> s;
-				if(s == "1")
-					nodes[1].get()->state = true;
-				else if(s == "0")
-					nodes[1].get()->state = false;
-			}
-			else
-			{
-				nodes[0].get()->state = true;
-				nodes[1].get()->state = true;
-			}
-			/////////////////////////////////////////////////////////////////////
-
-			//main simulation loop, iterate through every node and update everything
-			for(auto it = nodes.begin(); it != nodes.end(); it++)
-			{
-				it->get()->Update(cycle);
-			}
-			/////////////////////////////////////////////////////////////////////
-			//DEBUG - Output the type, inputs and outputs of every transfer function to see if some have wrong inputs or errors in the transfer function
-#ifdef DEBUG
-			for(auto it = tFuncs.begin(); it != tFuncs.end(); it++)
-			{
-				cout << "Type: " << it->get()->GetType() << " with " << it->get()->GetState() << endl;
-			}
-#endif
-			/////////////////////////////////////////////////////////////////////
-			//output the result for this particular case
-			cout << "Clock = " << nodes[6].get()->state << ", S: " <<  nodes[8].get()->state << ", R: " << nodes[9].get()->state << ", Result - q1 = " << nodes[10].get()->state << ", !q1 = " << nodes[11].get()->state << endl;
-			//cout << "    S: " <<  nodes[8].get()->state << ", R: " << nodes[9].get()->state << endl;
-			/////////////////////////////////////////////////////////////////////
-			//save the actuall node states in an array to analyse later
-			for(unsigned int i = 0; i < nodes.size(); i++)
-			{
-				data.get()[i + cycle * nodes.size()] = nodes[i].get()->state;
-			}
+			cout << ", output: " << currentState->outputTrue << endl;
+			currentState = currentState->nextStateTrue;
 		}
-		catch(const char * a)
+		else
 		{
-			cout << a << endl;
-			cout.flush();
-			cin >> s;
-			return 0;
-		}
-		catch(...)
-		{
-			cout << "Exception in cycle " << cycle << endl;
-			cout.flush();
-			cin >> s;
-			return 0;
+			cout << ", output: " << currentState->outputFalse << endl;
+			currentState = currentState->nextStateFalse;
 		}
 	}
-
-	for(int a = 0; a < nodes.size(); a++)
-	{
-		cout << "Node " << a << ": ";
-		for(int i = 0; i < MAX_CYCLES; i++)
-		{
-			cout << data.get()[a + i * nodes.size()];
-		}
-		cout << endl;
-	}
-	cout.flush();
-	cin >> s;
+	getchar();
 	return 0;
 }
 
+int LoadFileAndParse(const char * fileName, vector<shared_ptr<state>> & states)
+{
+	ifstream * f = new ifstream(fileName, ios::in);
+	if(!f->is_open())
+	{
+		cout << "File could not be opend!" << endl;
+		f->close();
+		delete f;
+		return 0;
+	}
+	size_t start = f->tellg();
+	f->seekg(0, ios::end);
+	size_t length = f->tellg();
+	length = length - start;
+	char * buffer = new char[length];
+	cout << "lenght: " << length << endl;
+	f->seekg(0, ios::beg);
+	f->read(buffer, length);
+	int count = parse(buffer, states);
+	delete buffer;
+	delete f;
+	return count;
+}
 
+int parse(char * data, vector<shared_ptr<state>> & states)
+{
+	char * end = strtok(data, "\n");
+	char * delim;
+	int filePos = 0;
+	vector<char*> lines;
+	do
+	{
+		if(strchr(end, '#') == NULL)
+			lines.push_back(end);
+		end=strtok(NULL, "\n");
+	}while(end != NULL);
+	for(int i = 0; i < lines.size(); i++)
+	{
+		try
+		{
+			states.push_back(make_shared<state>(new state(lines[i])));	
+		}
+		catch(...)
+		{
+			cout << "Error parsing line: " << i+1 << endl;
+		}
+	}
+	for(int i = 0; i < states.size(); i++)
+	{
+		for(int a = 0; a < states.size(); a++)
+		{
+			if(strcmp(states[i]->nextStateNameFalse, states[a]->stateName) == 0)
+			{
+				states[i]->nextStateFalse = states[a].get();
+			}
+			if(strcmp(states[i]->nextStateNameTrue, states[a]->stateName) == 0)
+			{
+				states[i]->nextStateTrue = states[a].get();
+			}
+			if(states[i]->nextStateTrue != NULL && states[i]->nextStateFalse != NULL)
+				break;
+		}
+	}
+	return lines.size();
+}
 
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(0)));		//ID 0
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(0)));		//ID 1
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(0)));		//ID 2
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(1)));		//ID 3
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(1)));		//ID 4
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(2)));		//ID 5
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(2)));		//ID 6
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(3)));		//ID 7
-
-	//tFuncs.push_back(make_shared<XORFunc>(new XORFunc(nodes[0], nodes[1], nodes[3], 2)));
-	//tFuncs.push_back(make_shared<XORFunc>(new XORFunc(nodes[2], nodes[3], nodes[5], 2)));
-	//tFuncs.push_back(make_shared<ANDFunc>(new ANDFunc(nodes[0], nodes[1], nodes[4], 1)));
-	//tFuncs.push_back(make_shared<ANDFunc>(new ANDFunc(nodes[2], nodes[3], nodes[6], 1)));
-	//tFuncs.push_back(make_shared<ORFunc>(new ORFunc(nodes[6], nodes[4], nodes[7], 1)));
-
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(0)));		//ID 0
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(0)));		//ID 1
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(1)));		//ID 2
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(1)));		//ID 3
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(3)));		//ID 4
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(3)));		//ID 5
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(2)));		//ID 6
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(2)));		//ID 7
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(5)));		//ID 8
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(5)));		//ID 9
-
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(4)));		//ID 10
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(4)));		//ID 11
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(6)));		//ID 12
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(6)));		//ID 13
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(7)));		//ID 14
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(7)));		//ID 15
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(8)));		//ID 16
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(8)));		//ID 17
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(9)));		//ID 18
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(9)));		//ID 19
-
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(10)));		//ID 20
-	//nodes.push_back(make_shared<node<bool>>(new node<bool>(10)));		//ID 21
-
-	//tFuncs.push_back(make_shared<ORFunc>(new ORFunc(nodes[3], nodes[4], nodes[6], 1)));
-	//tFuncs.push_back(make_shared<ORFunc>(new ORFunc(nodes[2], nodes[5], nodes[7], 1)));
-	//tFuncs.push_back(make_shared<ORFunc>(new ORFunc(nodes[15], nodes[19], nodes[20], 1)));
-	//tFuncs.push_back(make_shared<ORFunc>(new ORFunc(nodes[18], nodes[14], nodes[21], 1)));
-	//tFuncs.push_back(make_shared<ANDFunc>(new ANDFunc(nodes[0], nodes[6], nodes[5], 1)));
-	//tFuncs.push_back(make_shared<ANDFunc>(new ANDFunc(nodes[1], nodes[7], nodes[4], 1)));
-	//tFuncs.push_back(make_shared<ANDFunc>(new ANDFunc(nodes[5], nodes[8], nodes[11], 1)));
-	//tFuncs.push_back(make_shared<ANDFunc>(new ANDFunc(nodes[4], nodes[9], nodes[10], 1)));
-	//tFuncs.push_back(make_shared<ANDFunc>(new ANDFunc(nodes[4], nodes[12], nodes[15], 1)));
-	//tFuncs.push_back(make_shared<ANDFunc>(new ANDFunc(nodes[5], nodes[13], nodes[14], 1)));
-
-	//tFuncs.push_back(make_shared<ANDFunc>(new ANDFunc(nodes[12], nodes[16], nodes[18], 1)));
-	//tFuncs.push_back(make_shared<ANDFunc>(new ANDFunc(nodes[13], nodes[17], nodes[19], 1)));
-	//tFuncs.push_back(make_shared<NOTFunc>(new NOTFunc(nodes[1], nodes[3], 1)));
-	//tFuncs.push_back(make_shared<NOTFunc>(new NOTFunc(nodes[0], nodes[2], 1)));
-	//tFuncs.push_back(make_shared<NOTFunc>(new NOTFunc(nodes[10], nodes[8], 1)));
-	//tFuncs.push_back(make_shared<NOTFunc>(new NOTFunc(nodes[11], nodes[9], 1)));
-	//tFuncs.push_back(make_shared<NOTFunc>(new NOTFunc(nodes[8], nodes[13], 1)));
-	//tFuncs.push_back(make_shared<NOTFunc>(new NOTFunc(nodes[9], nodes[12], 1)));
-	//tFuncs.push_back(make_shared<NOTFunc>(new NOTFunc(nodes[15], nodes[16], 1)));
-	//tFuncs.push_back(make_shared<NOTFunc>(new NOTFunc(nodes[14], nodes[17], 1)));
+void DisplayStates(vector<shared_ptr<state>> & states)
+{
+	for (int i = 0; i < states.size(); i++)
+	{
+		cout << i << ": State " << states[i]->stateName << ", " << states[i]->nextStateNameFalse << ", " << states[i]->nextStateNameTrue << ", " << states[i]->outputFalse << ", " << states[i]->outputTrue << endl;
+	}
+}
